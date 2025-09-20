@@ -61,7 +61,7 @@ pipeline {
       }
     }
   }
-
+//sdzeezcssdfdsdsds
   post {
     success { echo "✅ OK — Image: ${DOCKER_IMAGE}:${VERSION} — Deploy Render déclenché." }
     failure { echo "❌ Échec du pipeline." }
