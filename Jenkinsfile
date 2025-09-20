@@ -2,7 +2,7 @@ pipeline {
   agent any
 
   environment {
-    // Remplace "tonuser" par ton compte Docker Hub
+    // Remplace "tonuser" par t
     DOCKER_IMAGE = 'docker.io/bayesaermbow/java17-render-app'
   }
 
