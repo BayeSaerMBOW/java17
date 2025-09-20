@@ -61,14 +61,7 @@ pipeline {
       }
     }
 
-    stage('Deploy on Render') {
-      steps {
-        withCredentials([string(credentialsId: 'render-deploy-hook', variable: 'RENDER_DEPLOY_HOOK')]) {
-          // POST de déploiement Render, avec retry simple
-          sh 'curl -fsSL -X POST "$RENDER_DEPLOY_HOOK" || (sleep 5 && curl -fsSL -X POST "$RENDER_DEPLOY_HOOK")'
-        }
-      }
-    }
+
   }
 //sfdsdddsdsds
   post {
