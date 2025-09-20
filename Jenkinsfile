@@ -12,7 +12,7 @@ pipeline {
     stage('Checkout') {
       steps { checkout scm }
     }
-
+//sfsffsfsfs
     stage('Set Version') {
       steps {
         script {
