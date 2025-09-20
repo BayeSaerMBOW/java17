@@ -7,7 +7,7 @@ pipeline {
   }
 
   options { timestamps(); ansiColor('xterm') }
-//ssggsgsgsgd
+
   stages {
     stage('Checkout') {
       steps { checkout scm }
