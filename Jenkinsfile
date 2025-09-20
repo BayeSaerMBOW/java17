@@ -58,7 +58,7 @@ pipeline {
       }
     }
   }
-
+//fdfddsddzz
   post {
     success { echo "✅ OK — Image: ${DOCKER_IMAGE}:${env.VERSION} — Déploiement Render déclenché." }
     failure { echo "❌ Échec du pipeline." }
