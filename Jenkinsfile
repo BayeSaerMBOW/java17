@@ -5,7 +5,10 @@ pipeline {
     DOCKER_IMAGE = 'docker.io/bayesaermbow/java17-render-app'
   }
 
-  options { timestamps(); ansiColor('xterm') }
+  options {
+    timestamps()
+    // ansiColor('xterm') // ← à réactiver uniquement si le plugin AnsiColor est installé
+  }
 
   stages {
 
@@ -16,8 +19,8 @@ pipeline {
     stage('Set Version') {
       steps {
         script {
-          // On récupère date et SHA via deux commandes séparées (aucun "$(" dans une chaîne Groovy)
-          def ts  = sh(script: 'date +%Y%m%d-%H%M%S',       returnStdout: true).trim()
+          // Récupère date et SHA via deux commandes séparées (évite tout $() dans une chaîne Groovy)
+          def ts  = sh(script: 'date +%Y%m%d-%H%M%S',        returnStdout: true).trim()
           def sha = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
           env.VERSION = "${ts}-${sha}"
           echo "Version: ${env.VERSION}"
@@ -33,19 +36,27 @@ pipeline {
 
     stage('Docker Build') {
       steps {
-        sh "docker build -t ${DOCKER_IMAGE}:${env.VERSION} -t ${DOCKER_IMAGE}:latest ."
+        sh """
+          docker build -t ${DOCKER_IMAGE}:${env.VERSION} -t ${DOCKER_IMAGE}:latest .
+        """
       }
     }
 
     stage('Docker Login & Push') {
       steps {
         withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+          // 1) login : garder un bloc en guillemets simples pour laisser $DOCKER_* au shell
           sh '''
+            set -e
             echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-            docker push '"${DOCKER_IMAGE}:${VERSION}"'
-            docker push '"${DOCKER_IMAGE}:latest"'
-            docker logout
           '''
+          // 2) push : ici on laisse Groovy interpoler DOCKER_IMAGE / env.VERSION
+          sh """
+            set -e
+            docker push ${DOCKER_IMAGE}:${env.VERSION}
+            docker push ${DOCKER_IMAGE}:latest
+            docker logout
+          """
         }
       }
     }
@@ -53,12 +64,13 @@ pipeline {
     stage('Deploy on Render') {
       steps {
         withCredentials([string(credentialsId: 'render-deploy-hook', variable: 'RENDER_DEPLOY_HOOK')]) {
+          // POST de déploiement Render, avec retry simple
           sh 'curl -fsSL -X POST "$RENDER_DEPLOY_HOOK" || (sleep 5 && curl -fsSL -X POST "$RENDER_DEPLOY_HOOK")'
         }
       }
     }
   }
-//fdfddsddzz
+
   post {
     success { echo "✅ OK — Image: ${DOCKER_IMAGE}:${env.VERSION} — Déploiement Render déclenché." }
     failure { echo "❌ Échec du pipeline." }
